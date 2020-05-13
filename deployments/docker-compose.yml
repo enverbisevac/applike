@@ -1,0 +1,52 @@
+version: '3.6'
+
+services:
+  mysql:
+    image: mysql:8.0
+    ports:
+      - 3306:3306
+    environment:
+      - MYSQL_DATABASE=applike
+      - MYSQL_USER=applike
+      - MYSQL_PASSWORD=applike
+      - MYSQL_ROOT_PASSWORD=applike
+    networks:
+      - applike
+
+  localstack:
+    image: localstack/localstack:latest
+    environment:
+      - DATA_DIR=/tmp/localstack/data
+      - DEFAULT_REGION=eu-central-1
+      - SERVICES=sqs
+    ports:
+      - 4576:4576
+    networks:
+      - applike
+
+  awslocal:
+    depends_on:
+      - localstack
+    image: janapplike/awslocal:latest
+    command: 'awslocal --endpoint-url="http://localstack:4576" sqs create-queue --queue-name my-queue'
+    networks:
+      - applike
+
+#  applike:
+#    image: applike:dev
+#    build:
+#      context: ../
+#    ports:
+#      - 3000:3000
+#    environment:
+#      DB_USERNAME: applike
+#      DB_PASSWORD: applike
+#      DB_HOST: mysql
+#      DB_NAME: applike
+#      DB_MIGRATIONS: migrations/
+#    depends_on:
+#      - mysql
+
+networks:
+  applike:
+    name: applike
